@@ -1,7 +1,8 @@
-
 import pigpio
 import wiegand
 import time, sched
+from threading import Timer
+
 
 class DoorController():
 
@@ -21,6 +22,7 @@ class DoorController():
         self.alarm_sounding_cb = None
         self.wiegand = None
         self.sched = sched.scheduler(time.time, time.sleep)
+        self.nopigpio = nopigpio
         if nopigpio is False:
             self._setup_gpio()
 
@@ -38,12 +40,16 @@ class DoorController():
                                        self.tag_scanned_cb, self.unknown_pin_d)
 
     def _pin_on(self, pin):
-        self.pi.set_mode(pin, pigpio.OUTPUT)
-        self.pi.write(pin, 1)
+        print("Pin " + str(pin) + " on")
+        if self.nopigpio is False:
+            self.pi.set_mode(pin, pigpio.OUTPUT)
+            self.pi.write(pin, 1)
 
     def _pin_off(self, pin):
-        self.pi.set_mode(pin, pigpio.OUTPUT)
-        self.pi.write(pin, 0)
+        print("Pin " + str(pin) + " off")
+        if self.nopigpio is False:
+            self.pi.set_mode(pin, pigpio.OUTPUT)
+            self.pi.write(pin, 0)
 
     def is_alarm_armed(self):
         status = self.pi.read(self.alarm_armed_status_pin) == 0
@@ -51,7 +57,7 @@ class DoorController():
 
     def toggle_alarm_pin(self):
         self._pin_on(self.alarm_toggle_pin)
-        self.sched.enter(3, 1, self._pin_off, (self.alarm_toggle_pin))
+        Timer(3, self._pin_off, args=[self.alarm_toggle_pin])
         pass
 
     def _alarm_arming(self):
@@ -63,15 +69,14 @@ class DoorController():
             return
         self.arming_alarm = True
 
-        self.sched.enter(10, 1, self._alarm_arming, ())
+        Timer(10, self._alarm_arming)
 
-        self.sched.enter()
         # if alarm is not already armed
         if not self.is_alamr_armed():
             self.toggle_alarm_pin()
 
         self._pin_off(self.buzzer_pin)
-        self.sched.enter(8, 1, self._pin_on, (self.buzzer_pin))
+        Timer(8, self._pin_on, args=[self.buzzer_pin])
 
         # TODO: log alarm armed
 
@@ -88,10 +93,11 @@ class DoorController():
             self.alarm_sounding = True
 
     def unlock_door(self):
+        print("Unlocking door..")
         self._pin_on(self.door_strike_pin)
-        self.sched.enter(6.5, 1, self._pin_off, (self.door_strike_pin))
-        self.sched.enter(0.1, 1, self._pin_off, (self.buzzer_pin))
-        self.sched.enter(1.0, 1, self._pin_on, (self.buzzer_pin))
+        Timer(6.5, self._pin_off, args=[self.door_strike_pin]).start()
+        Timer(0.1, self._pin_off, args=[self.buzzer_pin]).start()
+        Timer(1.0, self._pin_on, args=[self.buzzer_pin]).start()
 
     def set_tag_scanned_callback(self, callback):
         if callable(callback):
