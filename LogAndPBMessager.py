@@ -48,7 +48,7 @@ class access_logger():
         self.rot_handler = logging.handlers.RotatingFileHandler(log_filename,
                                                                 maxBytes=log_filesize,
                                                                 backupCount=log_backup_count)
-        self.rot_handller.setFormatter(self.formatter)
+        self.rot_handler.setFormatter(self.formatter)
         self.entrant_logger.addHandler(self.rot_handler)
 
     def new_occupant(self, member):
