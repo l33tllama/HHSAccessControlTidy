@@ -20,6 +20,8 @@ class DoorController():
         self.tag_scanned_cb = None
         self.alarm_sounding_cb = None
         self.wiegand = None
+        self.logger = logger
+
         self.sched = sched.scheduler(time.time, time.sleep)
         self.nopigpio = nopigpio
         if nopigpio is False:

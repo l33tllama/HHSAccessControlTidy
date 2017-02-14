@@ -1,12 +1,11 @@
 #!/usr/bin/env/python
 
 import time
-import logging, logging.handlers
+
 import ConfigParser
 from DoorController import DoorController as dc
 from TinyDBConnector import TinyDBConnector as tdb
-from PushbulletMessager import PushbulletMessager
-
+from LogAndPBMessager import LogAndPBMessager as logger
 # separate program in separate user, to hide password..
 from TidyHQController import TidyHQController
 
@@ -17,9 +16,12 @@ config_filename = 'config.cfg'
 #TODO: debug log
 #TODO: log when someone tries to enter after several tag scans
 
+
 class AccessController():
     def __init__(self):
         self.last_tag_scanned = 0
+        self.tag_scan_count = 0
+        self.tag_scan_repeat_message = 3
         self.db_reload_interval_seconds = 2 * 60
         self.db_reload_seconds = 0
 
@@ -45,22 +47,8 @@ class AccessController():
         debug_nopigpio = self.config.getboolean('Debug', 'nopigpio')
         print debug_nopigpio
 
-        # LOGGING
-        self.entrant_logger = logging.getLogger('EntrantLogger')
-        self.entrant_logger.setLevel(logging.INFO)
-        FORMAT = "%(asctime)-15s %(message)s"
-        logging.basicConfig(format=FORMAT)
-        self.formatter = logging.Formatter("%(asctime)s;%(message)s")
-
-        self.rot_handler = logging.handlers.RotatingFileHandler(log_filename,
-                                                                maxBytes=log_filesize,
-                                                                backupCount=log_backup_count)
-        self.rot_handler.setFormatter(self.formatter)
-        self.entrant_logger.addHandler(self.rot_handler)
-
-        # PUSHBULLET
-        self.pb = PushbulletMessager(pb_token, pb_channel)
-        #self.pb.test_message("TESTING")
+        # LOGGING AND PUSHBULLET FOR MESSAGES
+        self.log = logger(pb_token, pb_channel, log_filename, log_filesize, log_backup_count)
 
         # DOOR CONTROLLER
         self.dc = dc(nopigpio=debug_nopigpio)
@@ -75,21 +63,36 @@ class AccessController():
     def tag_scanned(self, bits, rfid):
         print("Tag scanned: " + str(rfid))
         contact, is_allowed = self.tinydb.is_allowed(rfid)
+        contact_name = "Unknown"
         if contact is not None:
+            contact_name = contact['first_name']
             print(contact['first_name'] + " " + contact['last_name'])
             if is_allowed is True:
+                self.tag_scan_count = 0
                 print ("is allowed!")
+                self.log.new_occupant(contact_name)
                 self.dc.unlock_door()
             else:
                 print ("isn't allowed")
         else:
             print ("Unknown tag ID")
 
+        if not is_allowed:
+            self.log.invalid_tag_retries(rfid, contact_name)
+            # Cheack for repeat scans
+            if(rfid == self.last_tag_scanned):
+                self.tag_scan_count += 1
+                if(self.tag_scan_count >= self.tag_scan_repeat_message):
+                    self.log.invalid_tag_retries(rfid, contact_name)
+            else:
+                self.tag_scan_count = 0
+            self.last_tag_scanned = rfid
+    def alarm_sounding(self):
+        pass
+
     def run(self):
         self.tidyhq.connect_to_api(self.tidy_username, self.tidy_password)
         self.tidyhq.reload_db(self.tinydb.userdb)
-
-        #self.tag_scanned(0, 39163864)
 
         while True:
             time.sleep(1)
@@ -97,11 +100,10 @@ class AccessController():
             if(self.db_reload_seconds > self.db_reload_interval_seconds):
                 self.tidyhq.connect_to_api(self.tidy_username, self.tidy_password)
                 self.tidyhq.reload_db(self.tinydb.userdb)
+                self.db_reload_seconds = 0
 
         self.dc.on_end()
 
 if __name__ == '__main__':
     ac = AccessController()
     ac.run()
-
-

@@ -12,8 +12,12 @@ class PushbulletMessager():
     def test_message(self, message):
         self.channel.push_note("HHS Test Message", message)
 
-    def message_new_occupant(self, member):
+    def new_occupant(self, member):
         self.channel.push_note("HHS Member Entered", member)
+        pass
+
+    def invalid_tag_attempts(self, tag_id, member):
+        self.channel.push_note("HHS repeat tag fail", "Tag ID: " + str(tag_id) + " name: " + member)
         pass
 
     def message_alarm_armed(self):
