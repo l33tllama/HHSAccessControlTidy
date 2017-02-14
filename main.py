@@ -72,13 +72,15 @@ class AccessController():
 
     def tag_scanned(self, bits, rfid):
         contact, is_allowed = self.tinydb.is_allowed(rfid)
-        print(contact['first_name'] + " " + contact['last_name'])
-        if is_allowed is True:
-            self.dc.unlock_door()
-            print ("is allowed!")
+        if contact is not None:
+            print(contact['first_name'] + " " + contact['last_name'])
+            if is_allowed is True:
+                self.dc.unlock_door()
+                print ("is allowed!")
+            else:
+                print ("isn't allowed")
         else:
-            print ("isn't allowed")
-        pass
+            print ("Unknown tag ID")
 
     def run(self):
         self.tidyhq.connect_to_api(self.tidy_username, self.tidy_password)

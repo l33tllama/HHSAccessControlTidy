@@ -3,7 +3,6 @@ import wiegand
 import time, sched
 from threading import Timer
 
-
 class DoorController():
 
     def __init__(self, nopigpio=False):
