@@ -73,6 +73,7 @@ class AccessController():
         self.tidyhq = TidyHQController(tidy_client_id, tidy_client_secret, tidy_member_group, tidy_domain_prefix)
 
     def tag_scanned(self, bits, rfid):
+        print("Tag scanned: " + str(rfid))
         contact, is_allowed = self.tinydb.is_allowed(rfid)
         if contact is not None:
             print(contact['first_name'] + " " + contact['last_name'])
@@ -88,7 +89,7 @@ class AccessController():
         self.tidyhq.connect_to_api(self.tidy_username, self.tidy_password)
         self.tidyhq.reload_db(self.tinydb.userdb)
 
-        self.tag_scanned(0, 99412070)
+        #self.tag_scanned(0, 99412070)
 
         while True:
             time.sleep(1)
