@@ -42,6 +42,7 @@ class AccessController():
         log_filename = self.config.get('Logging', 'filename')
         log_filesize = self.config.get('Logging', 'size_bytes')
         log_backup_count = self.config.get('Logging', 'backup_count')
+        debug_nopigpio = self.config.get('Debug', 'nopigpio')
 
         # LOGGING
         self.entrant_logger = logging.getLogger('EntrantLogger')
@@ -61,7 +62,7 @@ class AccessController():
         #self.pb.test_message("TESTING")
 
         # DOOR CONTROLLER
-        self.dc = dc(nopigpio=True)
+        self.dc = dc(nopigpio=debug_nopigpio)
         self.dc.set_tag_scanned_callback(self.tag_scanned)
 
         # TINYDB
