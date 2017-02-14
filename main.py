@@ -76,10 +76,11 @@ class AccessController():
         print("Tag scanned: " + str(rfid))
         contact, is_allowed = self.tinydb.is_allowed(rfid)
         if contact is not None:
+            print contact
             print(contact['first_name'] + " " + contact['last_name'])
             if is_allowed is True:
-                self.dc.unlock_door()
                 print ("is allowed!")
+                self.dc.unlock_door()
             else:
                 print ("isn't allowed")
         else:
