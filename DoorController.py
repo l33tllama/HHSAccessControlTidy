@@ -57,8 +57,9 @@ class DoorController():
         return status
 
     def toggle_alarm_pin(self):
-        self._pin_on(self.alarm_toggle_pin)
-        Timer(3, self._pin_off, args=[self.alarm_toggle_pin])
+        if self.is_alarm_armed():
+            self._pin_on(self.alarm_toggle_pin)
+            Timer(3, self._pin_off, args=[self.alarm_toggle_pin])
         pass
 
     def _alarm_arming(self):
@@ -69,6 +70,20 @@ class DoorController():
             self.tag_scanned_cb(bits, rfid)
         else:
             print("ERROR: tag scanned callback not callable.")
+
+    # alarm sounding :(
+    def _alarm_sounding(self, gpio, level, tick):
+        if not self.alarm_sounding:
+            time.sleep(1)
+            if self.pi.read(self.alarm_sounding_status_pin) == 1:
+                print "Debounced"
+                return
+            self.alarm_sounding = True
+            if(callable(self.alarm_sounding_cb)):
+                # send messages and stuff
+                self.alarm_sounding_cb()
+            else:
+                print("ERROR: tag scanned callback not callable. Panic!")
 
     # When the alarm arm button is pressed
     def arm_alarm(self):

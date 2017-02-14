@@ -60,6 +60,12 @@ class AccessController():
         # TIDYHQ
         self.tidyhq = TidyHQController(tidy_client_id, tidy_client_secret, tidy_member_group, tidy_domain_prefix)
 
+    def open_door(self, contact_name):
+        self.tag_scan_count = 0
+        print ("is allowed!")
+        self.log.new_occupant(contact_name)
+        self.dc.unlock_door()
+
     def tag_scanned(self, bits, rfid):
         print("Tag scanned: " + str(rfid))
         contact, is_allowed = self.tinydb.is_allowed(rfid)
@@ -68,10 +74,7 @@ class AccessController():
             contact_name = contact['first_name']
             print(contact['first_name'] + " " + contact['last_name'])
             if is_allowed is True:
-                self.tag_scan_count = 0
-                print ("is allowed!")
-                self.log.new_occupant(contact_name)
-                self.dc.unlock_door()
+                self.open_door(contact_name)
             else:
                 print ("isn't allowed")
         else:
@@ -87,7 +90,10 @@ class AccessController():
             else:
                 self.tag_scan_count = 0
             self.last_tag_scanned = rfid
+
+
     def alarm_sounding(self):
+
         pass
 
     def run(self):
