@@ -35,10 +35,10 @@ class TidyHQController():
             for membership in memberships:
                 if membership["contact_id"] == contact_id:
                     membership_state = membership["state"]
-                    print("Inserting state: " + membership_state)
+                    #print("Inserting state: " + membership_state)
                     tinydb.update(insert_membership_state(membership_state),
                                   User["id"] == contact_id)
-                    print(tinydb.search(User["id"] == contact_id))
+                    #print(tinydb.search(User["id"] == contact_id))
 
 
     def dump_to_tinydb(self, tinydb):

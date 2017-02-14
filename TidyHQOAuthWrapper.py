@@ -117,7 +117,6 @@ class TidyHQOAuthWrapper():
         cr.close()
 
         body = buffer.getvalue()
-        print body
         body_json = json.loads(body)
         #print(json.dumps(body_json, sort_keys=True, indent=4, separators=(',', ': ')))
         return body_json
