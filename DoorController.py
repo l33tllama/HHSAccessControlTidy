@@ -36,7 +36,7 @@ class DoorController():
         b = self.pi.callback(self.alarm_sounding_status_pin, pigpio.FALLING_EDGE, self.alarm_sounding)
         self.wiegand = wiegand.decoder(self.pi,
                                        self.unknown_pin_b, self.unknown_pin_c,
-                                       self.tag_scanned_cb, self.unknown_pin_d)
+                                       self._tag_scanned, self.unknown_pin_d)
         print("GPIO setup complete?")
 
     def _pin_on(self, pin):
@@ -62,6 +62,12 @@ class DoorController():
 
     def _alarm_arming(self):
         self.arming_alarm = False
+
+    def _tag_scanned(self, bits, rfid):
+        if callable(self.tag_scanned_cb):
+            self.tag_scanned_cb(bits, rfid)
+        else:
+            print("ERROR: tag scanned callback not callable.")
 
     # When the alarm arm button is pressed
     def arm_alarm(self):
@@ -102,7 +108,11 @@ class DoorController():
     def set_tag_scanned_callback(self, callback):
         if callable(callback):
             self.tag_scanned_cb = callback
+        else:
+            print("ERROR: tag scanned callback not callable" )
 
     def set_alarm_sounding_callback(self, callback):
         if(callable(callback)):
             self.alarm_sounding_cb = callback
+        else:
+            print("ERROR: alarm sounding callback not callable")
