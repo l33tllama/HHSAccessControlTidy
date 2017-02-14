@@ -43,6 +43,7 @@ class AccessController():
         log_filesize = self.config.get('Logging', 'size_bytes')
         log_backup_count = self.config.get('Logging', 'backup_count')
         debug_nopigpio = self.config.get('Debug', 'nopigpio')
+        print debug_nopigpio
 
         # LOGGING
         self.entrant_logger = logging.getLogger('EntrantLogger')

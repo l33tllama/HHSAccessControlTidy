@@ -37,6 +37,7 @@ class DoorController():
         self.wiegand = wiegand.decoder(self.pi,
                                        self.unknown_pin_b, self.unknown_pin_c,
                                        self.tag_scanned_cb, self.unknown_pin_d)
+        print("GPIO setup complete?")
 
     def _pin_on(self, pin):
         print("Pin " + str(pin) + " on")
