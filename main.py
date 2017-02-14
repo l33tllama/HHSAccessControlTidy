@@ -76,7 +76,6 @@ class AccessController():
         print("Tag scanned: " + str(rfid))
         contact, is_allowed = self.tinydb.is_allowed(rfid)
         if contact is not None:
-            print contact
             print(contact['first_name'] + " " + contact['last_name'])
             if is_allowed is True:
                 print ("is allowed!")
@@ -90,7 +89,7 @@ class AccessController():
         self.tidyhq.connect_to_api(self.tidy_username, self.tidy_password)
         self.tidyhq.reload_db(self.tinydb.userdb)
 
-        #self.tag_scanned(0, 99412070)
+        #self.tag_scanned(0, 39163864)
 
         while True:
             time.sleep(1)
