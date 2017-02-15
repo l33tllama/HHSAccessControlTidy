@@ -1,15 +1,13 @@
+'''
+'Wrapper' for TidyHQ's Oauth2 API
+- Basic CURL calls to get HTTPS data
+-
+'''
 import pycurl
 
 from StringIO import StringIO
 from urllib import urlencode
 import json
-import tinydb
-
-# Get API token
-
-# Read data
-
-# Write data
 
 class TidyHQOAuthWrapper():
 
@@ -21,43 +19,7 @@ class TidyHQOAuthWrapper():
         self.authenticated = False
         pass
 
-    def connect_app(self):
-        buffer = StringIO()
-        hbuff = StringIO()
-        cr = pycurl.Curl()
-        cr.setopt(cr.URL, 'https://accounts.tidyhq.com/oauth/authorize')
-        cr.setopt(cr.WRITEFUNCTION, buffer.write)
-        cr.setopt(cr.HEADERFUNCTION, hbuff.write)
-        cr.setopt(cr.FOLLOWLOCATION, True)
-        cr.setopt(cr.CONNECTTIMEOUT, 30)
-        cr.setopt(cr.AUTOREFERER, 1)
-        cr.setopt(cr.FOLLOWLOCATION, 1)
-        cr.setopt(cr.COOKIEFILE, '')
-        cr.setopt(cr.TIMEOUT, 30)
-        cr.setopt(cr.USERAGENT, '')
-        post_data = {'domain_prefix': self.domain_prefix,
-                     'client_id' : self.client_id,
-                     'redirect_uri': 'https://tidyhq.com',
-                     'response_type': 'code'}
-        postfields = urlencode(post_data)
-        cr.setopt(cr.POSTFIELDS, postfields)
-        cr.perform()
-        cr.close()
-
-        hbuff.seek(0)
-        location = ""
-
-        for l in hbuff:
-            if "Location" in l:
-                location = l.split(": ")[-1]
-
-        print location
-        #print(hbuff.getvalue())
-        #print(buffer.getvalue())
-
-    def set_access_token(self, access_token):
-        self.access_token = access_token
-
+    # Request access to API before sending CURL GETs for specific data
     def request_api_access_pw(self, username, password):
         buffer = StringIO()
         cr = pycurl.Curl()
@@ -81,24 +43,7 @@ class TidyHQOAuthWrapper():
             self.authenticated = True
             self.access_token = body_json['access_token']
 
-    def request_api_access(self, auth_token):
-        buffer = StringIO()
-        cr = pycurl.Curl()
-        self.access_token = auth_token
-        cr.setopt(cr.URL, 'https://accounts.tidyhq.com/oauth/token')
-        cr.setopt(cr.WRITEFUNCTION, buffer.write)
-        post_data = { 'client_id' : self.client_id,
-                        'client_secret' : self.client_secret,
-	                    'redirect_uri' : 'https://tidyhq.com',
-	                    'code' : auth_token,
-                        'grant_type' : 'authorization_code'}
-        postfields = urlencode(post_data)
-        cr.setopt(cr.POSTFIELDS, postfields)
-        cr.perform()
-        cr.close()
-        body = buffer.getvalue()
-        print(body)
-
+    # Generic CURL GET, programmatic version of 'curl url'
     def curl_get(self, request, fields=None):
         print("CURL GET: " + request)
         buffer = StringIO()
@@ -137,8 +82,54 @@ class TidyHQOAuthWrapper():
         contact_memberships = self.curl_get('contacts/:' + contact_id + '/memberships')
         return contact_memberships
 
-    def get_contacts(self):
-        return None
+    # OLD - for web interface method
+    def request_api_access(self, auth_token):
+        buffer = StringIO()
+        cr = pycurl.Curl()
+        self.access_token = auth_token
+        cr.setopt(cr.URL, 'https://accounts.tidyhq.com/oauth/token')
+        cr.setopt(cr.WRITEFUNCTION, buffer.write)
+        post_data = {'client_id': self.client_id,
+                     'client_secret': self.client_secret,
+                     'redirect_uri': 'https://tidyhq.com',
+                     'code': auth_token,
+                     'grant_type': 'authorization_code'}
+        postfields = urlencode(post_data)
+        cr.setopt(cr.POSTFIELDS, postfields)
+        cr.perform()
+        cr.close()
+        body = buffer.getvalue()
+        print(body)
 
-    def test(self):
-        print "Test"
+    # Not needed?
+    def connect_app(self):
+        buffer = StringIO()
+        hbuff = StringIO()
+        cr = pycurl.Curl()
+        cr.setopt(cr.URL, 'https://accounts.tidyhq.com/oauth/authorize')
+        cr.setopt(cr.WRITEFUNCTION, buffer.write)
+        cr.setopt(cr.HEADERFUNCTION, hbuff.write)
+        cr.setopt(cr.FOLLOWLOCATION, True)
+        cr.setopt(cr.CONNECTTIMEOUT, 30)
+        cr.setopt(cr.AUTOREFERER, 1)
+        cr.setopt(cr.FOLLOWLOCATION, 1)
+        cr.setopt(cr.COOKIEFILE, '')
+        cr.setopt(cr.TIMEOUT, 30)
+        cr.setopt(cr.USERAGENT, '')
+        post_data = {'domain_prefix': self.domain_prefix,
+                     'client_id' : self.client_id,
+                     'redirect_uri': 'https://tidyhq.com',
+                     'response_type': 'code'}
+        postfields = urlencode(post_data)
+        cr.setopt(cr.POSTFIELDS, postfields)
+        cr.perform()
+        cr.close()
+
+        hbuff.seek(0)
+        location = ""
+
+        for l in hbuff:
+            if "Location" in l:
+                location = l.split(": ")[-1]
+
+        print location

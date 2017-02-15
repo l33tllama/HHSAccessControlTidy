@@ -7,7 +7,8 @@ def insert_membership_state(state):
         element["membership_state"] = state
     return transform
 
-
+# Controller for TidyHQ
+# - Used mainly to dump contacts database to local TinyDB database
 class TidyHQController():
 
     def __init__(self, client_id, client_secret, member_group_id, domain_prefix):
@@ -17,6 +18,7 @@ class TidyHQController():
     def connect_to_api(self, username, password):
         self.oauth.request_api_access_pw(username, password)
 
+    # Get the latest contacts list
     def reload_db(self, tinydb):
         contacts = self.oauth.get_contacts_in_group(self.member_group_id)
         memberships = self.oauth.get_memberships()
