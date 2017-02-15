@@ -116,12 +116,20 @@ class DoorController():
 
     def unlock_door(self):
         print("Unlocking door..")
+
+        if self.alarm_sounding:
+            self.alarm_sounding = False
+
+        if self.is_alarm_armed():
+            self.toggle_alarm_pin()
+
         self._pin_on(self.door_strike_pin)
         Timer(6.5, self._pin_off, args=[self.door_strike_pin]).start()
         Timer(0.1, self._pin_off, args=[self.buzzer_pin]).start()
         Timer(1.0, self._pin_on, args=[self.buzzer_pin]).start()
 
     def set_tag_scanned_callback(self, callback):
+
         if callable(callback):
             self.tag_scanned_cb = callback
         else:

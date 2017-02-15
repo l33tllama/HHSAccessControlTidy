@@ -53,6 +53,7 @@ class AccessController():
         # DOOR CONTROLLER
         self.dc = dc(nopigpio=debug_nopigpio)
         self.dc.set_tag_scanned_callback(self.tag_scanned)
+        self.dc.set_alarm_sounding_callback(self.alarm_sounding)
 
         # TINYDB
         self.tinydb = tdb(db_loc)
@@ -67,9 +68,12 @@ class AccessController():
         self.dc.unlock_door()
 
     def tag_scanned(self, bits, rfid):
+
         print("Tag scanned: " + str(rfid))
+
         contact, is_allowed = self.tinydb.is_allowed(rfid)
         contact_name = "Unknown"
+
         if contact is not None:
             contact_name = contact['first_name']
             print(contact['first_name'] + " " + contact['last_name'])
@@ -82,6 +86,7 @@ class AccessController():
 
         if not is_allowed:
             self.log.invalid_tag_retries(rfid, contact_name)
+
             # Cheack for repeat scans
             if(rfid == self.last_tag_scanned):
                 self.tag_scan_count += 1
@@ -91,9 +96,8 @@ class AccessController():
                 self.tag_scan_count = 0
             self.last_tag_scanned = rfid
 
-
     def alarm_sounding(self):
-
+        self.log.alarm_sounding()
         pass
 
     def run(self):
