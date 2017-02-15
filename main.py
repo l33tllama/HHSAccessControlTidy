@@ -45,7 +45,10 @@ class AccessController():
         log_filesize = self.config.get('Logging', 'size_bytes')
         log_backup_count = self.config.get('Logging', 'backup_count')
         debug_nopigpio = self.config.getboolean('Debug', 'nopigpio')
-        print debug_nopigpio
+        if debug_nopigpio is False:
+            print ("PiGPIO enabled.")
+        else:
+            print ("PiGPIO disabled.")
 
         # LOGGING AND PUSHBULLET FOR MESSAGES
         self.log = logger(pb_token, pb_channel, log_filename, log_filesize, log_backup_count)
