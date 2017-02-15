@@ -37,7 +37,6 @@ class TidyHQOAuthWrapper():
         cr.perform()
         cr.close()
         body = buffer.getvalue()
-        print(body)
         body_json = json.loads(body)
         if body_json['access_token'] is not None:
             self.authenticated = True
@@ -45,7 +44,7 @@ class TidyHQOAuthWrapper():
 
     # Generic CURL GET, programmatic version of 'curl url'
     def curl_get(self, request, fields=None):
-        print("CURL GET: " + request)
+        #print("CURL GET: " + request)
         buffer = StringIO()
         cr = pycurl.Curl()
         cr.setopt(cr.URL, 'https://api.tidyhq.com/v1/' + request)

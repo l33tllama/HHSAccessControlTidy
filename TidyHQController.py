@@ -41,6 +41,7 @@ class TidyHQController():
                     tinydb.update(insert_membership_state(membership_state),
                                   User["id"] == contact_id)
                     #print(tinydb.search(User["id"] == contact_id))
+        print("Databse update complete.")
 
 
     def dump_to_tinydb(self, tinydb):
