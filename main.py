@@ -110,7 +110,7 @@ class AccessController():
 
     def run(self):
         self.reload_db(True)
-        self.log.info("Startup complete.")
+        self.log.info("Start-up complete.")
 
         while True:
             time.sleep(1)
