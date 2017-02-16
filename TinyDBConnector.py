@@ -10,6 +10,7 @@ class TinyDBConnector:
         rfid_match = False
         rfid_contact_found = None
         rfid_contacts = self.userdb.search(User['custom_fields'] != None)
+        #TODO: error handling
         for rfid_contact in rfid_contacts:
             for custom_field in rfid_contact['custom_fields']:
                 if custom_field['title'] == 'RFID Tag':

@@ -68,7 +68,6 @@ class TidyHQOAuthWrapper():
         if not self.authenticated:
             print ("Not authenticated! Cannot continue.")
             return
-        #print("CURL GET: " + request)
         buffer = StringIO()
         cr = pycurl.Curl()
         cr.setopt(cr.URL, 'https://api.tidyhq.com/v1/' + request)

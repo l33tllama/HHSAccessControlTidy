@@ -41,8 +41,8 @@ class DoorController():
     def _setup_gpio(self):
         self.pi = pigpio.pi()
         self.pi.write(self.buzzer_pin, 1)
-        a = self.pi.callback(self.arm_alarm_button_pin, pigpio.FALLING_EDGE, self.arm_alarm)
-        b = self.pi.callback(self.alarm_sounding_status_pin, pigpio.FALLING_EDGE, self.alarm_sounding)
+        a = self.pi.callback(self.arm_alarm_button_pin, pigpio.FALLING_EDGE, self._arm_alarm)
+        b = self.pi.callback(self.alarm_sounding_status_pin, pigpio.FALLING_EDGE, self._alarm_sounding)
         self.wiegand = wiegand.decoder(self.pi,
                                        self.unknown_pin_b, self.unknown_pin_c,
                                        self._tag_scanned, self.unknown_pin_d)
@@ -85,34 +85,21 @@ class DoorController():
         else:
             print("ERROR: tag scanned callback not callable.")
 
-    # Internal alarm sounding callback (calls main callback also, for alerting people..)
-    def _alarm_sounding(self, gpio, level, tick):
-        if not self.alarm_sounding:
-            time.sleep(1)
-            if self.pi.read(self.alarm_sounding_status_pin) == 1:
-                print "Debounced"
-                return
-            self.alarm_sounding = True
-            if(callable(self.alarm_sounding_cb)):
-                # send messages and stuff
-                self.alarm_sounding_cb()
-            else:
-                print("ERROR: tag scanned callback not callable. Panic!")
-
     # When the alarm is sounding (someone in before alarm disabled..)
-    def alarm_sounding(self, gpio, level, tick):
+    def _alarm_sounding(self, gpio, level, tick):
         if not self.alarm_sounding:
             # debounce
             time.sleep(2)
-            if (self.pi.read(self.alarm_sounding_status_pin) == 1):
+            if self.pi.read(self.alarm_sounding_status_pin) == 1:
                 print "debounced"
                 return
+            # alert people!
             if callable(self.alarm_sounding_cb):
                 self.alarm_sounding_cb()
             self.alarm_sounding = True
 
     # Arm alarm pin callback
-    def arm_alarm(self):
+    def _arm_alarm(self):
         if self.arming_alarm:
             return
         self.arming_alarm = True

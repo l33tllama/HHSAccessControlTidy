@@ -1,21 +1,13 @@
 #!/usr/bin/env/python
 
 import time
-
 import ConfigParser
 from DoorController import DoorController as dc
 from TinyDBConnector import TinyDBConnector as tdb
 from LogAndPBMessager import LogAndPBMessager as logger
-# separate program in separate user, to hide password..
 from TidyHQController import TidyHQController
 
 config_filename = 'config.cfg'
-
-#TODO: messaging (pushbullet)
-# - person entered, alarm armed, alarm sounding, etc
-#TODO: debug log
-#TODO: log when someone tries to enter after several tag scans
-
 
 class AccessController():
     def __init__(self):
