@@ -45,6 +45,7 @@ class AccessController():
         self.dc = dc(nopigpio=debug_nopigpio)
         self.dc.set_tag_scanned_callback(self.tag_scanned)
         self.dc.set_alarm_sounding_callback(self.alarm_sounding)
+        self.dc.set_alarm_armed_callback(self.alarm_armed)
 
         # TINYDB
         self.tinydb = tdb(db_loc)
@@ -92,7 +93,6 @@ class AccessController():
                 self.tag_scan_count = 0
             self.last_tag_scanned = rfid
 
-
     def alarm_sounding(self):
         self.log.alarm_sounding()
         pass
@@ -105,6 +105,9 @@ class AccessController():
             if show_info is True:
                 self.log.info("DB update complete.")
 
+    def alarm_armed(self):
+        self.log.alarm_armed()
+
     def run(self):
         self.reload_db(True)
         self.log.info("Startup complete.")
@@ -115,7 +118,7 @@ class AccessController():
             if(self.db_reload_seconds > self.db_reload_interval_seconds):
                 self.reload_db(False)
 
-        self.dc.on_end()
+        #TODO: handle on exit.. self.dc.on_end()
 
 if __name__ == '__main__':
     ac = AccessController()

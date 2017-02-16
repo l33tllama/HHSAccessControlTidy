@@ -19,6 +19,7 @@ class DoorController():
         self.arming_alarm = False
         self.tag_scanned_cb = None
         self.alarm_sounding_cb = None
+        self.alarm_armed_cb = None
         self.wiegand = None
 
         self.sched = sched.scheduler(time.time, time.sleep)
@@ -72,9 +73,11 @@ class DoorController():
             Timer(3, self._pin_off, args=[self.alarm_toggle_pin])
         pass
 
-    # ??
-    def _alarm_arming(self):
+    # timeout when arming alarm has finished (gives you chance to leave the building..)
+    def _alarm_armed(self):
         self.arming_alarm = False
+        if callable(self.alarm_armed_cb):
+            self.alarm_armed_cb()
 
     # Internal tag scanned callback (calls main callback also)
     def _tag_scanned(self, bits, rfid):
@@ -98,11 +101,13 @@ class DoorController():
 
     # Arm alarm pin callback
     def _arm_alarm(self):
+
         if self.arming_alarm:
             return
+
         self.arming_alarm = True
 
-        Timer(10, self._alarm_arming)
+        Timer(10, self._alarm_armed)
 
         # if alarm is not already armed
         if not self.is_alamr_armed():
@@ -136,5 +141,12 @@ class DoorController():
     def set_alarm_sounding_callback(self, callback):
         if(callable(callback)):
             self.alarm_sounding_cb = callback
+        else:
+            print("ERROR: alarm sounding callback not callable")
+
+    # set the alarm armed callback (make sure it's callable)
+    def set_alarm_armed_callback(self, callback):
+        if (callable(callback)):
+            self.alarm_armed_cb = callback
         else:
             print("ERROR: alarm sounding callback not callable")
