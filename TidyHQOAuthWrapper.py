@@ -17,7 +17,6 @@ class TidyHQOAuthWrapper():
         self.client_secret = client_secret
         self.domain_prefix = domain_prefix
         self.authenticated = False
-        pass
 
     def generic_fail_cb(self, message):
         print(message)
@@ -46,28 +45,31 @@ class TidyHQOAuthWrapper():
             if callable(on_fail_cb):
                 errno, errstr = error
                 on_fail_cb('CURL error ' + errstr)
+            return False
         finally:
             cr.close()
-            body = buffer.getvalue()
-            body_json = {}
-            try:
-                body_json = json.loads(body)
-            except ValueError:
-                if callable(on_fail_cb):
-                    on_fail_cb("No JSON object returned from CURl request.")
-            finally:
-                try:
-                    self.access_token = body_json['access_token']
-                    self.authenticated = True
-                except KeyError:
-                    on_fail_cb("No key 'access_token' in JSON repsonse.")
+
+        body = buffer.getvalue()
+        body_json = {}
+        try:
+            body_json = json.loads(body)
+        except ValueError:
+            if callable(on_fail_cb):
+                on_fail_cb("No JSON object returned from CURl request.")
+            return False
+        try:
+            self.access_token = body_json['access_token']
+            self.authenticated = True
+        except KeyError:
+            on_fail_cb("No key 'access_token' in JSON repsonse.")
         return self.authenticated
 
     # Generic CURL GET, programmatic version of 'curl url'
     def curl_get(self, request, fields=None):
         if not self.authenticated:
             print ("Not authenticated! Cannot continue.")
-            return
+            return False
+        on_fail_cb = self.generic_fail_cb
         buffer = StringIO()
         cr = pycurl.Curl()
         cr.setopt(cr.URL, 'https://api.tidyhq.com/v1/' + request)
@@ -79,13 +81,20 @@ class TidyHQOAuthWrapper():
             postfields = urlencode(post_data)
             cr.setopt(cr.POSTFIELDS, postfields)
         cr.setopt(cr.HTTPHEADER, ["Authorization: Bearer " + str(self.access_token)])
-
-        cr.perform()
-        cr.close()
+        try:
+            cr.perform()
+        except pycurl.error, error:
+            on_fail_cb('CURL error: ' + error)
+            return False
+        finally:
+            cr.close()
 
         body = buffer.getvalue()
-        body_json = json.loads(body)
-        #print(json.dumps(body_json, sort_keys=True, indent=4, separators=(',', ': ')))
+        try:
+            body_json = json.loads(body)
+        except ValueError:
+            on_fail_cb("JSON decode error on CURL GET " + request)
+            return False
         return body_json
 
     def get_contacts(self):

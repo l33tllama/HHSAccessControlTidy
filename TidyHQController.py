@@ -26,6 +26,9 @@ class TidyHQController():
             return False
         contacts = self.oauth.get_contacts_in_group(self.member_group_id)
         memberships = self.oauth.get_memberships()
+        if contacts is False or memberships is False:
+            print("Error getting data from TidyHQ!")
+            return False
 
         # clear DB
         tinydb.purge()

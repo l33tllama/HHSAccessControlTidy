@@ -22,7 +22,7 @@ class PushbulletMessenger(object):
         thread = threading.Thread(target=self.message_loop, args=())
         thread.daemon = True
         thread.start()
-        self._send('HHS Access Start-up', 'Yep, I\'m working')
+        self._send('HHS Access Start-up', 'Yep, I\'m working.')
 
     def message_loop(self):
         while True:
