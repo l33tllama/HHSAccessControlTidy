@@ -117,6 +117,7 @@ class AccessController():
             time.sleep(1)
             self.db_reload_seconds += 1
             if(self.db_reload_seconds > self.db_reload_interval_seconds):
+                self.db_reload_seconds = 0
                 self.reload_db(False)
 
         #TODO: handle on exit.. self.dc.on_end()
