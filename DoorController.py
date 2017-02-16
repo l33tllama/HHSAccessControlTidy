@@ -50,14 +50,12 @@ class DoorController():
 
     # Pin ON
     def _pin_on(self, pin):
-        print("Pin " + str(pin) + " on")
         if self.nopigpio is False:
             self.pi.set_mode(pin, pigpio.OUTPUT)
             self.pi.write(pin, 1)
 
     # Pin OFF
     def _pin_off(self, pin):
-        print("Pin " + str(pin) + " off")
         if self.nopigpio is False:
             self.pi.set_mode(pin, pigpio.OUTPUT)
             self.pi.write(pin, 0)
@@ -115,8 +113,6 @@ class DoorController():
 
     # Called from main - open the door!
     def unlock_door(self):
-        print("Unlocking door..")
-
         if self.alarm_sounding:
             self.alarm_sounding = False
 

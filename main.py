@@ -54,26 +54,29 @@ class AccessController():
 
     def open_door(self, contact_name):
         self.tag_scan_count = 0
-        print ("is allowed!")
         self.log.new_occupant(contact_name)
         self.dc.unlock_door()
 
     def tag_scanned(self, bits, rfid):
 
-        print("Tag scanned: " + str(rfid))
+        self.log.info("Tag scanned: " + str(rfid))
 
         contact, is_allowed = self.tinydb.is_allowed(rfid)
         contact_name = "Unknown"
 
         if contact is not None:
-            contact_name = contact['first_name']
-            print(contact['first_name'] + " " + contact['last_name'])
+            contact_name = contact['first_name'] + " " + contact['last_name']
+            info_str = "Contact found: " + contact_name
+
             if is_allowed is True:
+                info_str += " - allowed."
                 self.open_door(contact_name)
             else:
-                print ("isn't allowed")
+                info_str += " - not allowed."
+
+            self.log.info(info_str)
         else:
-            print ("Unknown tag ID")
+            self.log.info("Unknown ID.")
 
         if not is_allowed:
             self.log.invalid_tag_retries(rfid, contact_name)
@@ -86,6 +89,8 @@ class AccessController():
             else:
                 self.tag_scan_count = 0
             self.last_tag_scanned = rfid
+
+
 
     def alarm_sounding(self):
         self.log.alarm_sounding()
