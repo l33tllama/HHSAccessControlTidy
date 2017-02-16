@@ -84,7 +84,8 @@ class TidyHQOAuthWrapper():
         try:
             cr.perform()
         except pycurl.error, error:
-            on_fail_cb('CURL error: ' + error)
+            errno, errstr = error
+            on_fail_cb('CURL error: ' + errstr)
             return False
         finally:
             cr.close()
