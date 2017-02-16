@@ -15,7 +15,6 @@ class TinyDBConnector:
             for custom_field in rfid_contact['custom_fields']:
                 if custom_field['title'] == 'RFID Tag':
                     if custom_field['value'] == str(rfid):
-                        print ("RFID Match: " + str(custom_field['value']))
                         rfid_match = True
                         rfid_contact_found = rfid_contact
                     #print "Tag id: " + custom_field['value'] + " name: " + rfid_contact['first_name'] + " " + rfid_contact['last_name'] + " Tag state: " + rfid_contact['membership_state']

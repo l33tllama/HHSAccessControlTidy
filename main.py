@@ -57,6 +57,7 @@ class AccessController():
         self.log.new_occupant(contact_name)
         self.dc.unlock_door()
 
+
     def tag_scanned(self, bits, rfid):
 
         self.log.info("Tag scanned: " + str(rfid))
@@ -70,11 +71,11 @@ class AccessController():
 
             if is_allowed is True:
                 info_str += " - allowed."
-                self.open_door(contact_name)
             else:
                 info_str += " - not allowed."
-
             self.log.info(info_str)
+
+            if is_allowed: self.open_door(contact_name)
         else:
             self.log.info("Unknown ID.")
 
@@ -89,7 +90,6 @@ class AccessController():
             else:
                 self.tag_scan_count = 0
             self.last_tag_scanned = rfid
-
 
 
     def alarm_sounding(self):
