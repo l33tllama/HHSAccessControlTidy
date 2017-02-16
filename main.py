@@ -14,7 +14,6 @@ class AccessController():
         self.last_tag_scanned = 0
         self.tag_scan_count = 0
         self.tag_scan_repeat_message = 3
-        self.db_reload_interval_seconds = 2 * 60
         self.db_reload_seconds = 0
 
         # CONFIG
@@ -30,6 +29,7 @@ class AccessController():
         tidy_member_group = self.config.get('TidyHQ', 'group_id')
         tidy_domain_prefix = self.config.get('TidyHQ', 'domain_prefix')
         self.tidy_username = self.config.get('TidyHQ', 'username')
+        self.db_reload_interval_seconds = self.config.getint('TidyHQ', 'update_interval_sec')
         # IMPORTANT - Make sure you run this on a server with a password only you know!
         # As it's saved in plain text :/
         self.tidy_password = self.config.get('TidyHQ', 'password')
@@ -37,6 +37,7 @@ class AccessController():
         log_filesize = self.config.get('Logging', 'size_bytes')
         log_backup_count = self.config.get('Logging', 'backup_count')
         debug_nopigpio = self.config.getboolean('Debug', 'nopigpio')
+        self.config.getint('TidyHQ','update_interval_sec')
 
         # LOGGING AND PUSHBULLET FOR MESSAGES
         self.log = logger(pb_token, pb_channel, log_filename, log_filesize, log_backup_count)

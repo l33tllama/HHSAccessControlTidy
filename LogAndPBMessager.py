@@ -2,6 +2,7 @@ from pushbullet import PushBullet
 import logging, logging.handlers
 import threading
 from time import localtime, strftime, sleep
+from requests import ConnectionError
 
 
 class PushbulletMessenger(object):
@@ -27,8 +28,12 @@ class PushbulletMessenger(object):
     def message_loop(self):
         while True:
             if len(self.pending_messages) > 0:
-                (title, content) = self.pending_messages.pop()
-                self.channel.push_note(title, content)
+                backup = (title, content) = self.pending_messages.pop()
+                try:
+                    self.channel.push_note(title, content)
+                except ConnectionError:
+                    print("Error sending message, trying again..")
+                    self.pending_messages.append(backup)
             sleep(2)
 
     def _send(self, title, content):
