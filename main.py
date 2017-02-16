@@ -45,10 +45,6 @@ class AccessController():
         log_filesize = self.config.get('Logging', 'size_bytes')
         log_backup_count = self.config.get('Logging', 'backup_count')
         debug_nopigpio = self.config.getboolean('Debug', 'nopigpio')
-        if debug_nopigpio is False:
-            print ("PiGPIO enabled.")
-        else:
-            print ("PiGPIO disabled.")
 
         # LOGGING AND PUSHBULLET FOR MESSAGES
         self.log = logger(pb_token, pb_channel, log_filename, log_filesize, log_backup_count)
@@ -103,17 +99,21 @@ class AccessController():
         self.log.alarm_sounding()
         pass
 
-    def run(self):
+    def reload_db(self, show_info=False):
         self.tidyhq.connect_to_api(self.tidy_username, self.tidy_password)
-        self.tidyhq.reload_db(self.tinydb.userdb)
+        if self.tidyhq.reload_db(self.tinydb.userdb) is False:
+            self.log.error("DB update failed!")
+        else:
+            if show_info is True:
+                self.log.info("DB update complete.")
 
+    def run(self):
+        self.reload_db(True)
         while True:
             time.sleep(1)
             self.db_reload_seconds += 1
             if(self.db_reload_seconds > self.db_reload_interval_seconds):
-                self.tidyhq.connect_to_api(self.tidy_username, self.tidy_password)
-                self.tidyhq.reload_db(self.tinydb.userdb)
-                self.db_reload_seconds = 0
+                self.reload_db(False)
 
         self.dc.on_end()
 

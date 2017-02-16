@@ -19,10 +19,15 @@ class TidyHQOAuthWrapper():
         self.authenticated = False
         pass
 
+    def generic_fail_cb(self, message):
+        print(message)
+
     # Request access to API before sending CURL GETs for specific data
-    def request_api_access_pw(self, username, password):
+    def request_api_access_pw(self, username, password, on_fail_cb=None):
         buffer = StringIO()
         cr = pycurl.Curl()
+        if on_fail_cb is None:
+            on_fail_cb = self.generic_fail_cb
         cr.setopt(cr.URL, 'https://accounts.tidyhq.com/oauth/token')
         cr.setopt(cr.WRITEFUNCTION, buffer.write)
         post_data = {   'domain_prefix' : self.domain_prefix,
@@ -34,16 +39,35 @@ class TidyHQOAuthWrapper():
                         'grant_type': 'password'}
         postfields = urlencode(post_data)
         cr.setopt(cr.POSTFIELDS, postfields)
-        cr.perform()
-        cr.close()
-        body = buffer.getvalue()
-        body_json = json.loads(body)
-        if body_json['access_token'] is not None:
-            self.authenticated = True
-            self.access_token = body_json['access_token']
+
+        try:
+            cr.perform()
+        except pycurl.error, error:
+            if callable(on_fail_cb):
+                errno, errstr = error
+                on_fail_cb('CURL error ' + errstr)
+        finally:
+            cr.close()
+            body = buffer.getvalue()
+            body_json = {}
+            try:
+                body_json = json.loads(body)
+            except ValueError:
+                if callable(on_fail_cb):
+                    on_fail_cb("No JSON object returned from CURl request.")
+            finally:
+                try:
+                    self.access_token = body_json['access_token']
+                    self.authenticated = True
+                except KeyError:
+                    on_fail_cb("No key 'access_token' in JSON repsonse.")
+        return self.authenticated
 
     # Generic CURL GET, programmatic version of 'curl url'
     def curl_get(self, request, fields=None):
+        if not self.authenticated:
+            print ("Not authenticated! Cannot continue.")
+            return
         #print("CURL GET: " + request)
         buffer = StringIO()
         cr = pycurl.Curl()

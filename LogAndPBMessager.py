@@ -1,9 +1,9 @@
-from PushbulletMessager import PushbulletMessager
 from pushbullet import PushBullet
 import logging, logging.handlers
 from time import gmtime, strftime
 
-class PushbulletMessager():
+
+class PushbulletMessenger():
     def __init__(self, api_token, channel_name):
         self.pb = PushBullet(api_token)
         self.channel = self.pb.channels[0]
@@ -12,6 +12,7 @@ class PushbulletMessager():
             if channel.name == channel_name:
                 channel_found = True
                 self.channel = channel
+                print("Channel " + channel_name + " found")
         if not channel_found:
             print("Channel: " + channel_name + " not found.")
 
@@ -36,6 +37,9 @@ class PushbulletMessager():
 
     def alarm_sounding(self):
         self.channel.push_note("ALARM! at HHS", "Alarm is currently sounding. Might want to check it out.")
+
+    def error(self, message):
+        self.channel.push_note("HHS Access ERROR", message)
 
 class access_logger():
     def __init__(self, log_filename, log_filesize, log_backup_count):
@@ -66,12 +70,15 @@ class access_logger():
     def alarm_sounding(self):
         self.entrant_logger.error("Alarm has been triggered and is sounding!!")
 
-    def log(self, message):
-        self.entrant_logger.log(message)
+    def info(self, message):
+        self.entrant_logger.info(message)
+
+    def error(self, message):
+        self.entrant_logger.error(message)
 
 class LogAndPBMessager():
     def __init__(self, pb_token, pb_channel, log_filename, log_filesize, log_backup_count):
-        self.pb = PushbulletMessager(pb_token, pb_channel)
+        self.pb = PushbulletMessenger(pb_token, pb_channel)
         self.logger = access_logger(log_filename, log_filesize, log_backup_count)
         self.last_occupant = "No-one"
         pass
@@ -101,5 +108,9 @@ class LogAndPBMessager():
         self.pb.alarm_sounding()
         pass
 
-    def log(self, message):
-        self.logger.log(message)
+    def info(self, message):
+        self.logger.info(message)
+
+    def error(self, message):
+        self.logger.error(message)
+        self.pb.error(message)

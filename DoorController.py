@@ -23,13 +23,21 @@ class DoorController():
 
         self.sched = sched.scheduler(time.time, time.sleep)
         self.nopigpio = nopigpio
+
+        if nopigpio is False:
+            print ("PiGPIO enabled.")
+        else:
+            print ("PiGPIO disabled.")
+
         if nopigpio is False:
             self._setup_gpio()
 
+    # When program ends
     def on_end(self):
         self.wiegand.cancel()
         self.pi.stop()
 
+    # Setup when PiGPIO is enabled (on device)
     def _setup_gpio(self):
         self.pi = pigpio.pi()
         self.pi.write(self.buzzer_pin, 1)
@@ -40,38 +48,44 @@ class DoorController():
                                        self._tag_scanned, self.unknown_pin_d)
         print("GPIO setup complete.")
 
+    # Pin ON
     def _pin_on(self, pin):
         print("Pin " + str(pin) + " on")
         if self.nopigpio is False:
             self.pi.set_mode(pin, pigpio.OUTPUT)
             self.pi.write(pin, 1)
 
+    # Pin OFF
     def _pin_off(self, pin):
         print("Pin " + str(pin) + " off")
         if self.nopigpio is False:
             self.pi.set_mode(pin, pigpio.OUTPUT)
             self.pi.write(pin, 0)
 
+    # Get status of alarm armed status by reading pin
     def is_alarm_armed(self):
         status = self.pi.read(self.alarm_armed_status_pin) == 0
         return status
 
+    # Toggle the arm alarm pin
     def toggle_alarm_pin(self):
         if self.is_alarm_armed():
             self._pin_on(self.alarm_toggle_pin)
             Timer(3, self._pin_off, args=[self.alarm_toggle_pin])
         pass
 
+    # ??
     def _alarm_arming(self):
         self.arming_alarm = False
 
+    # Internal tag scanned callback (calls main callback also)
     def _tag_scanned(self, bits, rfid):
         if callable(self.tag_scanned_cb):
             self.tag_scanned_cb(bits, rfid)
         else:
             print("ERROR: tag scanned callback not callable.")
 
-    # alarm sounding :(
+    # Internal alarm sounding callback (calls main callback also, for alerting people..)
     def _alarm_sounding(self, gpio, level, tick):
         if not self.alarm_sounding:
             time.sleep(1)
@@ -85,7 +99,19 @@ class DoorController():
             else:
                 print("ERROR: tag scanned callback not callable. Panic!")
 
-    # When the alarm arm button is pressed
+    # When the alarm is sounding (someone in before alarm disabled..)
+    def alarm_sounding(self, gpio, level, tick):
+        if not self.alarm_sounding:
+            # debounce
+            time.sleep(2)
+            if (self.pi.read(self.alarm_sounding_status_pin) == 1):
+                print "debounced"
+                return
+            if callable(self.alarm_sounding_cb):
+                self.alarm_sounding_cb()
+            self.alarm_sounding = True
+
+    # Arm alarm pin callback
     def arm_alarm(self):
         if self.arming_alarm:
             return
@@ -100,20 +126,7 @@ class DoorController():
         self._pin_off(self.buzzer_pin)
         Timer(8, self._pin_on, args=[self.buzzer_pin])
 
-        # TODO: log alarm armed
-
-    # When the alarm is sounding (someone in before alarm disabled..)
-    def alarm_sounding(self, gpio, level, tick):
-        if not self.alarm_sounding:
-            # debounce
-            time.sleep(2)
-            if(self.pi.read(self.alarm_sounding_status_pin) == 1):
-                print "debounced"
-                return
-            if callable(self.alarm_sounding_cb):
-                self.alarm_sounding_cb()
-            self.alarm_sounding = True
-
+    # Called from main - open the door!
     def unlock_door(self):
         print("Unlocking door..")
 
@@ -128,6 +141,7 @@ class DoorController():
         Timer(0.1, self._pin_off, args=[self.buzzer_pin]).start()
         Timer(1.0, self._pin_on, args=[self.buzzer_pin]).start()
 
+    # set the tag scanned callback (make sure it's callable)
     def set_tag_scanned_callback(self, callback):
 
         if callable(callback):
@@ -135,6 +149,7 @@ class DoorController():
         else:
             print("ERROR: tag scanned callback not callable" )
 
+    # set the alarm sounding callback (make sure it's callable)
     def set_alarm_sounding_callback(self, callback):
         if(callable(callback)):
             self.alarm_sounding_cb = callback
