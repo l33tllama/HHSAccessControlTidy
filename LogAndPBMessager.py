@@ -17,7 +17,7 @@ class PushbulletMessenger():
             print("Channel: " + channel_name + " not found.")
 
     def _get_time(self):
-        return strftime("%a, %d %b %Y %H:%M:%S +0000", localtime())
+        return strftime("%a, %d %b %Y %H:%M:%S", localtime())
 
     def test_message(self, message):
         self.channel.push_note("HHS Test Message", message)
