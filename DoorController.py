@@ -110,7 +110,7 @@ class DoorController():
         Timer(10, self._alarm_armed)
 
         # if alarm is not already armed
-        if not self.is_alamr_armed():
+        if not self.is_alarm_armed():
             self.toggle_alarm_pin()
 
         self._pin_off(self.buzzer_pin)
