@@ -56,8 +56,8 @@ class AccessController():
 
     def open_door(self, contact_name):
         self.tag_scan_count = 0
-        self.log.new_occupant(contact_name)
         self.dc.unlock_door()
+        self.log.new_occupant(contact_name)
 
 
     def tag_scanned(self, bits, rfid):

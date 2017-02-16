@@ -1,9 +1,10 @@
 from pushbullet import PushBullet
 import logging, logging.handlers
-from time import localtime, strftime
+import threading
+from time import localtime, strftime, sleep
 
 
-class PushbulletMessenger():
+class PushbulletMessenger(object):
     def __init__(self, api_token, channel_name):
         self.pb = PushBullet(api_token)
         self.channel = self.pb.channels[0]
@@ -16,30 +17,44 @@ class PushbulletMessenger():
         if not channel_found:
             print("Channel: " + channel_name + " not found.")
 
+        self.pending_messages = []
+
+        thread = threading.Thread(target=self.message_loop, args=())
+        thread.daemon = True
+        thread.start()
+        self._send('test', 'hello')
+
+    def message_loop(self):
+        while True:
+            if len(self.pending_messages) > 0:
+                (title, content) = self.pending_messages.pop()
+                self.channel.push_note(title, content)
+            sleep(2)
+
+    def _send(self, title, content):
+        self.pending_messages.append((title, content))
+
     def _get_time(self):
         return strftime("%a, %d %b %Y %H:%M:%S", localtime())
 
     def test_message(self, message):
-        self.channel.push_note("HHS Test Message", message)
+        self._send("HHS Test Message", message)
 
     def new_occupant(self, member):
-        self.channel.push_note("HHS New Occupant", member + " entered at " + self._get_time())
-        pass
+        self._send("HHS New Occupant", member + " entered at " + self._get_time())
 
     def invalid_tag_attempts(self, tag_id, member):
-        self.channel.push_note("HHS repeat tag fail", "Tag ID: " + str(tag_id) + " name: " + member)
-        pass
+        self._send("HHS repeat tag fail", "Tag ID: " + str(tag_id) + " name: " + member)
 
     def alarm_armed(self, last_entrant):
-        self.channel.push_note("HHS Alarm Armed", "Alarm armed at " + self._get_time() + " last occupant scanned: "
+        self._send("HHS Alarm Armed", "Alarm armed at " + self._get_time() + " last occupant scanned: "
                                + last_entrant)
-        pass
 
     def alarm_sounding(self):
-        self.channel.push_note("ALARM! at HHS", "Alarm is currently sounding. Might want to check it out.")
+        self._send("ALARM! at HHS", "Alarm is currently sounding. Might want to check it out.")
 
     def error(self, message):
-        self.channel.push_note("HHS Access ERROR", message)
+        self._send("HHS Access ERROR", message)
 
 class access_logger():
     def __init__(self, log_filename, log_filesize, log_backup_count):
@@ -81,32 +96,26 @@ class LogAndPBMessager():
         self.pb = PushbulletMessenger(pb_token, pb_channel)
         self.logger = access_logger(log_filename, log_filesize, log_backup_count)
         self.last_occupant = "No-one"
-        pass
 
     def new_occupant(self, member):
         self.pb.new_occupant(member)
         self.logger.new_occupant(member)
         self.last_occupant = member
-        pass
 
     def invalid_tag(self, rfid_tag, member):
         self.logger.invalid_tag(rfid_tag, member)
-        pass
 
     def invalid_tag_retries(self, rfid_tag, member):
         self.logger.invalid_tag_retries(rfid_tag, member)
         self.pb.invalid_tag_attempts(rfid_tag, member)
-        pass
 
     def alarm_armed(self):
         self.logger.alarm_armed()
         self.pb.alarm_armed(self.last_occupant)
-        pass
 
     def alarm_sounding(self):
         self.logger.alarm_sounding()
         self.pb.alarm_sounding()
-        pass
 
     def info(self, message):
         self.logger.info(message)
