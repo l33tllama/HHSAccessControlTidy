@@ -1,6 +1,6 @@
 from pushbullet import PushBullet
 import logging, logging.handlers
-from time import gmtime, strftime
+from time import localtime, strftime
 
 
 class PushbulletMessenger():
@@ -17,7 +17,7 @@ class PushbulletMessenger():
             print("Channel: " + channel_name + " not found.")
 
     def _get_time(self):
-        return strftime("%a, %d %b %Y %H:%M:%S +0000", gmtime())
+        return strftime("%a, %d %b %Y %H:%M:%S +0000", localtime())
 
     def test_message(self, message):
         self.channel.push_note("HHS Test Message", message)

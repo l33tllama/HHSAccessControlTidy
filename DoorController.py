@@ -101,7 +101,7 @@ class DoorController():
 
     # Arm alarm pin callback
     def _arm_alarm(self, gpio, level, tick):
-
+        print ("Alarm arming, emmitting beep..")
         if self.arming_alarm:
             return
 
