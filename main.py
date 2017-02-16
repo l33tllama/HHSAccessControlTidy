@@ -52,6 +52,7 @@ class AccessController():
         # TIDYHQ
         self.tidyhq = TidyHQController(tidy_client_id, tidy_client_secret, tidy_member_group, tidy_domain_prefix)
 
+
     def open_door(self, contact_name):
         self.tag_scan_count = 0
         self.log.new_occupant(contact_name)
@@ -106,6 +107,8 @@ class AccessController():
 
     def run(self):
         self.reload_db(True)
+        self.log.info("Startup complete.")
+
         while True:
             time.sleep(1)
             self.db_reload_seconds += 1
