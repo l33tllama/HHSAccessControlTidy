@@ -70,7 +70,7 @@ class DoorController():
     def toggle_alarm_pin(self):
         if self.is_alarm_armed():
             self._pin_on(self.alarm_toggle_pin)
-            Timer(3, self._pin_off, args=[self.alarm_toggle_pin])
+            Timer(3, self._pin_off, args=[self.alarm_toggle_pin]).start()
         pass
 
     # timeout when arming alarm has finished (gives you chance to leave the building..)
@@ -107,14 +107,14 @@ class DoorController():
 
         self.arming_alarm = True
 
-        Timer(10, self._alarm_armed)
+        Timer(10, self._alarm_armed).start()
 
         # if alarm is not already armed
         if not self.is_alarm_armed():
             self.toggle_alarm_pin()
 
         self._pin_off(self.buzzer_pin)
-        Timer(8, self._pin_on, args=[self.buzzer_pin])
+        Timer(8, self._pin_on, args=[self.buzzer_pin]).start()
 
     # Called from main - open the door!
     def unlock_door(self):
@@ -125,9 +125,9 @@ class DoorController():
             self.toggle_alarm_pin()
 
         self._pin_on(self.door_strike_pin)
-        Timer(6.5, self._pin_off, args=[self.door_strike_pin]).start()
         Timer(0.1, self._pin_off, args=[self.buzzer_pin]).start()
         Timer(1.0, self._pin_on, args=[self.buzzer_pin]).start()
+        Timer(6.5, self._pin_off, args=[self.door_strike_pin]).start()
 
     # set the tag scanned callback (make sure it's callable)
     def set_tag_scanned_callback(self, callback):
