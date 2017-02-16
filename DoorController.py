@@ -100,7 +100,7 @@ class DoorController():
             self.alarm_sounding = True
 
     # Arm alarm pin callback
-    def _arm_alarm(self):
+    def _arm_alarm(self, gpio, level, tick):
 
         if self.arming_alarm:
             return
