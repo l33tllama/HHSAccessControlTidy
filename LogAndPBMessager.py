@@ -3,7 +3,7 @@ import logging, logging.handlers
 import threading
 from time import localtime, strftime, sleep
 from requests import ConnectionError
-
+import OpenSSL
 
 class PushbulletMessenger(object):
     def __init__(self, api_token, channel_name):
@@ -31,8 +31,10 @@ class PushbulletMessenger(object):
                 backup = (title, content) = self.pending_messages.pop()
                 try:
                     self.channel.push_note(title, content)
-                except ConnectionError:
+                except ConnectionError as e:
                     print("Error sending message, trying again..")
+                    self.pending_messages.append(backup)
+                except OpenSSL.SSL.SysCallError as e:
                     self.pending_messages.append(backup)
             sleep(2)
 
