@@ -25,7 +25,7 @@ class TinyDBConnector:
             for custom_field in rfid_contact_found['custom_fields']:
                 if custom_field['title'] == 'temporary_member':
                     print "temp member found: " + str(custom_field['value'])
-                    if custom_field['value'] == 'true':
+                    if custom_field['value'] == 'true' or custom_field['value'] == True:
                         temp_member = True
                         print "Temp member allowed"
             if rfid_contact_found['membership_state'] == 'activated':
