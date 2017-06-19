@@ -22,8 +22,8 @@ class TinyDBConnector:
         if rfid_match is True:
             temp_member = False
             # Check for temp member field (temp hack..)
-            for custom_field in rfid_contact['custom_fields']:
-                if custom_field['title'] == 'RFID Tag':
+            for custom_field in rfid_contact_found['custom_fields']:
+                if custom_field['title'] == 'temporary_member':
                     if custom_field['value'] == 'true':
                         temp_member = True
                         print "Temp member allowed"
