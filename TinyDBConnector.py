@@ -22,6 +22,13 @@ class TinyDBConnector:
         if rfid_match is True:
             if rfid_contact_found['membership_state'] == 'activated':
                 return (rfid_contact_found, True)
-            else: return (rfid_contact_found, False)
+            else:
+                # Check for temp member field (temp hack..)
+                for custom_field in rfid_contact['custom_fields']:
+                    if custom_field['title'] == 'RFID Tag':
+                        if custom_field['value'] == 'true':
+                            return (rfid_contact_found, True)
+
+                return (rfid_contact_found, False)
         else:
             return (None, False)
