@@ -7,16 +7,22 @@ import OpenSSL
 
 class PushbulletMessenger(object):
     def __init__(self, api_token, channel_name):
-        self.pb = PushBullet(api_token)
-        self.channel = self.pb.channels[0]
-        channel_found = False
-        for channel in self.pb.channels:
-            if channel.name == channel_name:
-                channel_found = True
-                self.channel = channel
-                print("Channel " + channel_name + " found")
-        if not channel_found:
-            print("Channel: " + channel_name + " not found.")
+
+        self.channel_name = channel_name
+        self.api_token = api_token
+        self.pb_connected = False
+
+        try:
+            self.pb = PushBullet(self.api_token)
+        except ConnectionError as e:
+            #print "Retrying PB loop"
+            print "PB connection error - not connecting today.."
+            #TODO: figure out how to get PB to reconnect - thread isn't working!
+            #self.retry_connect_pushbullet()
+        else:
+            print "PB connected"
+            self.pb_connected = False
+            self.setup_pb()
 
         self.pending_messages = []
 
@@ -25,18 +31,54 @@ class PushbulletMessenger(object):
         thread.start()
         self._send('HHS Access Start-up', 'Yep, I\'m working.')
 
+    # on successful connect, setup PB
+    def setup_pb(self):
+        self.channel = self.pb.channels[0]
+        channel_found = False
+        for channel in self.pb.channels:
+            if channel.name == self.channel_name:
+                channel_found = True
+                self.channel = channel
+                print("Channel " + self.channel_name + " found")
+        if not channel_found:
+            print("Channel: " + self.channel_name + " not found.")
+
+    # try to send messages
     def message_loop(self):
         while True:
-            if len(self.pending_messages) > 0:
-                backup = (title, content) = self.pending_messages.pop()
-                try:
-                    self.channel.push_note(title, content)
-                except ConnectionError as e:
-                    print("Error sending message, trying again..")
-                    self.pending_messages.append(backup)
-                except OpenSSL.SSL.SysCallError as e:
-                    self.pending_messages.append(backup)
+            if self.pb_connected:
+                if len(self.pending_messages) > 0:
+                    backup = (title, content) = self.pending_messages.pop()
+                    try:
+                        self.channel.push_note(title, content)
+                    except ConnectionError as e:
+                        print("Error sending message, trying again..")
+                        self.pending_messages.append(backup)
+                    except OpenSSL.SSL.SysCallError as e:
+                        self.pending_messages.append(backup)
             sleep(2)
+
+    # retry PB in a thread..
+    def retry_pb_thread(self):
+        while not self.pb_connected:
+            try:
+                self.pb = PushBullet(self.api_token)
+            except ConnectionError as e:
+                print "PB connection error"
+                self.error("PB Connection error")
+            else:
+                print "PB connected now"
+                self.pb_connected = True
+                self.setup_pb()
+                #self._send('PB connected after error..')
+
+            sleep(2)
+
+    # Start thread to retry PB connection
+    def retry_connect_pushbullet(self):
+        thread = threading.Thread(target=self.retry_pb_thread, args=())
+        thread.daemon = True
+        thread.start()
 
     def _send(self, title, content):
         self.pending_messages.append((title, content))
